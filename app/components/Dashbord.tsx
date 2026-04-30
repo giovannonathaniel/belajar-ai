@@ -30,7 +30,9 @@ import {
   MessageCircle,
   Check,
   MoreVertical,
-  Trash2
+  Trash2,
+  Star,    // <-- TAMBAHKAN INI
+  Users
 } from "lucide-react";
 
 type Flashcard = { question: string; answer: string };
@@ -70,39 +72,39 @@ interface DashboardProps {
 // ==========================================
 const STUDY_GUIDES_DATA = [
   // Arts
-  { id: 1, title: "Introduction to Arts", category: "Arts", img: "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=400&q=80", isLocked: false },
-  { id: 2, title: "Prof. Dr. Andre Indrawan", category: "Arts", img: "https://ugm.ac.id/wp-content/uploads/2010/10/andre_isi_1.jpg", isLocked: true },
-  { id: 3, title: "Mentor Danton Sihombing, MFA.", category: "Arts", img: "https://storage.googleapis.com/swafiles/images/2025/11/272229/1764257341_ad58124ae0c31cdb4456.jpg", isLocked: true },
+  { id: 1, title: "Introduction to Arts", category: "Arts", img: "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=400&q=80", isLocked: false, rating: 4.8, enrolled: "12.5k" },
+  { id: 2, title: "Prof. Dr. Andre Indrawan", category: "Arts", img: "https://ugm.ac.id/wp-content/uploads/2010/10/andre_isi_1.jpg", isLocked: true, rating: 4.9, enrolled: "8.2k" },
+  { id: 3, title: "Mentor Danton Sihombing, MFA.", category: "Arts", img: "https://storage.googleapis.com/swafiles/images/2025/11/272229/1764257341_ad58124ae0c31cdb4456.jpg", isLocked: true, rating: 4.7, enrolled: "5.1k" },
   
   // History
-  { id: 6, title: "Introduction to History", category: "History", img: "https://images.unsplash.com/photo-1461360228754-6e81c478b882?w=400&q=80", isLocked: false },
-  { id: 7, title: "Mentor Akhmad Steivano, S.I.Kom.", category: "History", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQb9vPOx9b-SHPj6F0JKOOsCzi9-WRxvQWWfA&s", isLocked: true },
-  { id: 8, title: "Prof. Dr. Anhar Gonggong", category: "History", img: "https://asset.tribunnews.com/_DZzX35X-O6RDmSY5eTyNAY42OU=/1200x675/filters:upscale():quality(30):format(webp):focal(0.5x0.5:0.5x0.5)/makassar/foto/bank/originals/Anhar-Gonggong-1-2082024.jpg", isLocked: true },
+  { id: 6, title: "Introduction to History", category: "History", img: "https://images.unsplash.com/photo-1461360228754-6e81c478b882?w=400&q=80", isLocked: false, rating: 4.6, enrolled: "15.3k" },
+  { id: 7, title: "Mentor Akhmad Steivano, S.I.Kom.", category: "History", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQb9vPOx9b-SHPj6F0JKOOsCzi9-WRxvQWWfA&s", isLocked: true, rating: 4.8, enrolled: "11.4k" },
+  { id: 8, title: "Prof. Dr. Anhar Gonggong", category: "History", img: "https://asset.tribunnews.com/_DZzX35X-O6RDmSY5eTyNAY42OU=/1200x675/filters:upscale():quality(30):format(webp):focal(0.5x0.5:0.5x0.5)/makassar/foto/bank/originals/Anhar-Gonggong-1-2082024.jpg", isLocked: true, rating: 4.9, enrolled: "5.1k" },
 
   // Economics
-  { id: 11, title: "Introduction to Economics", category: "Economics", img: "https://www.marketeers.com/_next/image/?url=https%3A%2F%2Froom.marketeers.com%2Fwp-content%2Fuploads%2F2023%2F01%2F186809681_presentation-wide.jpg&w=1920&q=75", isLocked: false },
-  { id: 12, title: "Mentor Ferry Irwandi, S.E., M.M., M.B.A.", category: "Economics", img: "https://c.inilah.com/reborn/2024/10/large_Snapinsta_app_449833215_1029256281883444_8397298077218426290_n_1080_11zon_f6e88e0e7c.jpg", isLocked: true },
-  { id: 13, title: "Prof. Rhenald Kasali, Ph.D.", category: "Economics", img: "https://c.inilah.com/reborn/2025/10/large_Rhenald_Kasali_7b2d1adf87.jpg", isLocked: true },
+  { id: 11, title: "Introduction to Economics", category: "Economics", img: "https://www.marketeers.com/_next/image/?url=https%3A%2F%2Froom.marketeers.com%2Fwp-content%2Fuploads%2F2023%2F01%2F186809681_presentation-wide.jpg&w=1920&q=75", isLocked: false, rating: 4.7, enrolled: "22.8k" },
+  { id: 12, title: "Mentor Ferry Irwandi, S.E.", category: "Economics", img: "https://c.inilah.com/reborn/2024/10/large_Snapinsta_app_449833215_1029256281883444_8397298077218426290_n_1080_11zon_f6e88e0e7c.jpg", isLocked: true, rating: 4.9, enrolled: "94.2k" },
+  { id: 13, title: "Prof. Rhenald Kasali, Ph.D.", category: "Economics", img: "https://c.inilah.com/reborn/2025/10/large_Rhenald_Kasali_7b2d1adf87.jpg", isLocked: true, rating: 5.0, enrolled: "23.9k" },
 
   // Social Sciences
-  { id: 16, title: "Introduction to Social Sciences", category: "Social Sciences", img: "https://platform.vox.com/wp-content/uploads/sites/2/chorus/uploads/chorus_asset/file/19539913/GettyImages_862457080.jpg?quality=90&strip=all&crop=0,9.0726794418797,100,81.854641116241", isLocked: false },
-  { id: 17, title: "Dr. dr. Dwijo Saputro, Sp.KJ (K)", category: "Social Sciences", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTxtgSkmR8ExSIjLph1_rbrRBlHSFxXSJLTXw&s", isLocked: true },
-  { id: 18, title: "Drs. Rocky Gerung", category: "Social Sciences", img: "https://blue.kumparan.com/image/upload/fl_progressive,fl_lossy,c_fill,f_auto,q_auto:best,w_640/v1634025439/01j6ztc7w7pb9bfbd965cwb6dg.jpg", isLocked: true },
+  { id: 16, title: "Introduction to Social Sciences", category: "Social Sciences", img: "https://platform.vox.com/wp-content/uploads/sites/2/chorus/uploads/chorus_asset/file/19539913/GettyImages_862457080.jpg?quality=90&strip=all&crop=0,9.0726794418797,100,81.854641116241", isLocked: false, rating: 4.5, enrolled: "18.1k" },
+  { id: 17, title: "Dr. dr. Dwijo Saputro, Sp.KJ (K)", category: "Social Sciences", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTxtgSkmR8ExSIjLph1_rbrRBlHSFxXSJLTXw&s", isLocked: true, rating: 4.8, enrolled: "7.6k" },
+  { id: 18, title: "Drs. Rocky Gerung", category: "Social Sciences", img: "https://blue.kumparan.com/image/upload/fl_progressive,fl_lossy,c_fill,f_auto,q_auto:best,w_640/v1634025439/01j6ztc7w7pb9bfbd965cwb6dg.jpg", isLocked: true, rating: 4.9, enrolled: "82.4k" },
 
   // Math
-  { id: 21, title: "Introduction to Mathematics", category: "Math", img: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=400&q=80", isLocked: false },
-  { id: 22, title: "Mentor Jerome Polin Sijabat, B.Eng.", category: "Math", img: "https://assets-a1.kompasiana.com/items/album/2023/03/26/jerome-batik-6420014308a8b5232f67f602.jpg?t=o&v=770", isLocked: true },
-  { id: 23, title: "Prof. Hendra Gunawan, Ph.D.", category: "Math", img: "https://itb.ac.id/files/dosen/1384-c2006175638f4a57cfcd5a6516d851534337ff2acc07e41fee18c323ca016006.png", isLocked: true },
+  { id: 21, title: "Introduction to Mathematics", category: "Math", img: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=400&q=80", isLocked: false, rating: 4.6, enrolled: "25.5k" },
+  { id: 22, title: "Mentor Jerome Polin Sijabat", category: "Math", img: "https://assets-a1.kompasiana.com/items/album/2023/03/26/jerome-batik-6420014308a8b5232f67f602.jpg?t=o&v=770", isLocked: true, rating: 4.9, enrolled: "188.3k" },
+  { id: 23, title: "Prof. Hendra Gunawan, Ph.D.", category: "Math", img: "https://itb.ac.id/files/dosen/1384-c2006175638f4a57cfcd5a6516d851534337ff2acc07e41fee18c323ca016006.png", isLocked: true, rating: 4.8, enrolled: "14.2k" },
 
   // Science
-  { id: 26, title: "Introduction to Science", category: "Science", img: "https://images.unsplash.com/photo-1530026405186-ed1f139313f8?w=400&q=80", isLocked: false },
-  { id: 27, title: "Mentor Fajrul Falah, S.Si., M.Sc.", category: "Science", img: "https://unnes.ac.id/mipa/wp-content/uploads/sites/6/2023/10/70336743-b645-4e18-910a-46c97558c92b.jpeg", isLocked: true },
-  { id: 28, title: "dr. Tirta Mandira Hudhi, M.B.A.", category: "Science", img: "https://feb.ugm.ac.id/wp-content/uploads/sites/47/2024/11/drtirta-11112024.jpg", isLocked: true },
+  { id: 26, title: "Introduction to Science", category: "Science", img: "https://images.unsplash.com/photo-1530026405186-ed1f139313f8?w=400&q=80", isLocked: false, rating: 4.7, enrolled: "19.8k" },
+  { id: 27, title: "Mentor Fajrul Falah, M.Sc.", category: "Science", img: "https://unnes.ac.id/mipa/wp-content/uploads/sites/6/2023/10/70336743-b645-4e18-910a-46c97558c92b.jpeg", isLocked: true, rating: 4.8, enrolled: "41.5k" },
+  { id: 28, title: "dr. Tirta Mandira Hudhi", category: "Science", img: "https://feb.ugm.ac.id/wp-content/uploads/sites/47/2024/11/drtirta-11112024.jpg", isLocked: true, rating: 4.7, enrolled: "84.1k" },
 
   // English
-  { id: 31, title: "Introduction to English", category: "English", img: "https://images.unsplash.com/photo-1491841573634-28140fc7ced7?w=400&q=80", isLocked: false },
-  { id: 32, title: "Mentor Denisio Perez", category: "English", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRAGptCOIhybxvcFZqowa48uCHW3hM5oGDCEw&s", isLocked: true },
-  { id: 33, title: "Mentor Dave Jephcott", category: "English", img: "https://jatimnet.com/jinet/assets/media/news/news/image_front/Dave-Jephcott.-Instagram-Londo-Kampung.-1.png", isLocked: true },
+  { id: 31, title: "Introduction to English", category: "English", img: "https://images.unsplash.com/photo-1491841573634-28140fc7ced7?w=400&q=80", isLocked: false, rating: 4.8, enrolled: "42.0k" },
+  { id: 32, title: "Mentor Denisio Perez", category: "English", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRAGptCOIhybxvcFZqowa48uCHW3hM5oGDCEw&s", isLocked: true, rating: 4.9, enrolled: "38.7k" },
+  { id: 33, title: "Mentor Dave Jephcott", category: "English", img: "https://jatimnet.com/jinet/assets/media/news/news/image_front/Dave-Jephcott.-Instagram-Londo-Kampung.-1.png", isLocked: true, rating: 4.9, enrolled: "41.2k" },
 ];
 
 const CATEGORIES = ["All", "History", "Arts", "English", "Social Sciences", "Math", "Science", "Economics"];
@@ -742,17 +744,30 @@ export default function Dashboard({ onUpload, onUploadYoutube, onOpenNote, onWri
                     </div>
                     
                     {/* Bagian Teks (Bawah) */}
-                    <div className="p-6 text-center bg-[#202438] border-t border-white/5 relative">
+                    <div className="p-5 bg-[#202438] border-t border-white/5 relative flex flex-col justify-between flex-1">
                       {/* Badge Premium untuk yang dilock */}
                       {guide.isLocked && (
-                        <div className="absolute top-0 right-6 -translate-y-1/2 bg-indigo-500 text-white text-[10px] font-black tracking-wider px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg shadow-indigo-500/30">
+                        <div className="absolute top-0 right-5 -translate-y-1/2 bg-indigo-500 text-white text-[10px] font-black tracking-wider px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg shadow-indigo-500/30">
                           <Sparkles className="h-3 w-3" /> PRO
                         </div>
                       )}
 
-                      <h3 className={`text-xl font-black transition-colors duration-300 ${guide.isLocked ? 'text-white/50' : 'text-white group-hover:text-[#5546ed]'}`}>
+                      <h3 className={`text-[17px] font-black leading-tight mb-4 transition-colors duration-300 ${guide.isLocked ? 'text-white/50' : 'text-white group-hover:text-[#5546ed]'}`}>
                          {guide.title}
                       </h3>
+
+                      {/* --- RATING & ENROLLED STUDENTS --- */}
+                      <div className="flex items-center gap-3 text-[13px] font-semibold text-white/50 mt-auto">
+                        <div className="flex items-center gap-1.5">
+                          <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                          <span className={guide.isLocked ? 'text-white/40' : 'text-white/80'}>{guide.rating}</span>
+                        </div>
+                        <div className="h-1 w-1 rounded-full bg-white/20" /> {/* Pemisah titik */}
+                        <div className="flex items-center gap-1.5">
+                          <Users className="h-4 w-4" />
+                          <span>{guide.enrolled}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}
