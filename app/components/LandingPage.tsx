@@ -7,12 +7,40 @@ interface LandingPageProps {
   onGetStarted: () => void;
 }
 
+const USER_PROFILE_KEY = "belajar_ai_user_profile_v1";
+
 export default function LandingPage({ onGetStarted }: LandingPageProps) {
   // STATE UNTUK ANIMASI SHOWCASE
   const [step, setStep] = useState(0);
   const [progress, setProgress] = useState(0);
 
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [profileName, setProfileName] = useState("");
+  const [profileEmail, setProfileEmail] = useState("");
+
+  const handleGetStarted = () => {
+    try {
+      const savedProfile = localStorage.getItem(USER_PROFILE_KEY);
+      if (savedProfile) {
+        onGetStarted();
+        return;
+      }
+    } catch {}
+
+    setShowProfileModal(true);
+  };
+
+  const handleProfileSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const name = profileName.trim();
+    const email = profileEmail.trim();
+    if (!name || !email) return;
+
+    localStorage.setItem(USER_PROFILE_KEY, JSON.stringify({ name, email }));
+    setShowProfileModal(false);
+    onGetStarted();
+  };
 
   useEffect(() => {
     let timeout: NodeJS.Timeout;
@@ -76,7 +104,7 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
           {/* Tombol Kanan */}
           <div className="flex items-center gap-4">
             <button 
-              onClick={onGetStarted}
+              onClick={handleGetStarted}
               className="rounded-full border border-white/10 bg-white/5 text-white px-5 py-2 text-[13px] font-bold hover:bg-white/10 transition-colors shadow-sm"
             >
               Mulai sekarang
@@ -107,7 +135,7 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
 
           <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto animate-in fade-in slide-in-from-bottom-10 duration-700 delay-300">
             <button 
-              onClick={onGetStarted}
+              onClick={handleGetStarted}
               className="w-full sm:w-auto px-8 py-4 rounded-xl bg-[#5546ED] hover:bg-[#4A28C1] text-white font-bold text-[15px] flex items-center justify-center shadow-[0_0_30px_rgba(85,70,237,0.3)] transition-all hover:scale-105 active:scale-95"
             >
               Mulai Sekarang - Gratis
@@ -594,7 +622,7 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
             </p>
             
             <button 
-              onClick={onGetStarted}
+              onClick={handleGetStarted}
               className="px-6 py-3 rounded-xl bg-[#5546ED] hover:bg-[#4A28C1] text-white font-bold text-[15px] transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(85,70,237,0.3)]"
             >
               Mulai Sekarang - Gratis
@@ -642,6 +670,64 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
         </div>
         
       </footer>
+
+      {showProfileModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-[24px] border border-white/10 bg-[#202438] p-6 shadow-2xl">
+            <div className="mb-6">
+              <div className="mb-3 inline-flex h-11 w-11 items-center justify-center rounded-xl border border-[#5546ED]/30 bg-[#5546ED]/10">
+                <Sparkles className="h-5 w-5 text-[#7c6cff]" />
+              </div>
+              <h2 className="text-2xl font-black text-white">Sign Up</h2>
+              <p className="mt-2 text-sm leading-relaxed text-white/55">
+                Buat catatan dalam beberapa detik. Tidak ada kartu kredit yang diperlukan.
+              </p>
+            </div>
+
+            <form onSubmit={handleProfileSubmit} className="space-y-4">
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-white/80">Nama</label>
+                <input
+                  type="text"
+                  value={profileName}
+                  onChange={(e) => setProfileName(e.target.value)}
+                  placeholder="Nama kamu"
+                  className="w-full rounded-[16px] border border-white/10 bg-[#1b1f2d] px-4 py-3.5 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-[#5546ED]/60"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-white/80">Email</label>
+                <input
+                  type="email"
+                  value={profileEmail}
+                  onChange={(e) => setProfileEmail(e.target.value)}
+                  placeholder="nama@email.com"
+                  className="w-full rounded-[16px] border border-white/10 bg-[#1b1f2d] px-4 py-3.5 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-[#5546ED]/60"
+                  required
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setShowProfileModal(false)}
+                  className="rounded-[14px] px-5 py-2.5 text-sm font-semibold text-white/65 transition hover:bg-white/5"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-[14px] bg-[#5546ED] px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-[#5546ED]/20 transition hover:bg-[#4A28C1]"
+                >
+                  Create Account
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
       
     </div>
   );

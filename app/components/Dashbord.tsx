@@ -38,6 +38,7 @@ type QuizItem = { question: string; options: string[]; answer: number; hint: str
 type MindMapData = { title: string; nodes: string[]; };
 type ChatMessage = { role: "user" | "ai"; content: string; };
 type GenerationCount = 15 | 25 | 30;
+type UserProfile = { name: string; email: string };
 
 type HistoryItem = {
   fileKey: string;
@@ -54,6 +55,7 @@ type HistoryItem = {
 };
 
 const STORAGE_KEY = "pdf_ai_history_dashboard_v1";
+const USER_PROFILE_KEY = "belajar_ai_user_profile_v1";
 
 interface DashboardProps {
   onUpload: (file: File, subject: string, generationCount: GenerationCount) => void;
@@ -153,11 +155,17 @@ export default function Dashboard({ onUpload, onUploadYoutube, onOpenNote, onWri
   const [examProgress, setExamProgress] = useState(0);
   const [streak, setStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
+  const [userProfile, setUserProfile] = useState<UserProfile>({ name: "User", email: "user@email.com" });
 
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) setHistory(JSON.parse(saved));
+      const savedProfile = localStorage.getItem(USER_PROFILE_KEY);
+      if (savedProfile) {
+        const parsedProfile = JSON.parse(savedProfile);
+        if (parsedProfile?.name && parsedProfile?.email) setUserProfile(parsedProfile);
+      }
     } catch { setHistory([]); }
 
     const savedExamDate = localStorage.getItem("pdf_ai_exam_date");
@@ -303,6 +311,15 @@ export default function Dashboard({ onUpload, onUploadYoutube, onOpenNote, onWri
     const matchesSearch = guide.title.toLowerCase().includes(guideSearch.toLowerCase());
     return matchesCategory && matchesSearch;
   });
+  const firstName = userProfile.name.trim().split(/\s+/)[0] || "User";
+  const initials = userProfile.name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase() || "U";
+  const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(userProfile.email || userProfile.name)}&backgroundColor=c0aede`;
 
   return (
     <div className="min-h-[100dvh] md:h-screen overflow-auto md:overflow-hidden bg-[#11131f] text-white relative">
@@ -357,10 +374,10 @@ export default function Dashboard({ onUpload, onUploadYoutube, onOpenNote, onWri
 
           <div className="hidden md:block p-5 border-t border-white/10 mt-auto">
             <div className="flex items-center gap-3 rounded-2xl p-2 hover:bg-white/5 transition cursor-pointer">
-              <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Giovanno&backgroundColor=c0aede" alt="Profile" className="w-10 h-10 rounded-full bg-white/10 object-cover border border-white/10" />
+              <img src={avatarUrl} alt="Profile" className="w-10 h-10 rounded-full bg-white/10 object-cover border border-white/10" />
               <div className="flex-1 overflow-hidden">
-                <div className="font-bold text-sm text-white truncate">Giovanno Nathaniel</div>
-                <div className="text-xs text-white/50 truncate">giovannonathaniel0@gmail.com</div>
+                <div className="font-bold text-sm text-white truncate">{userProfile.name}</div>
+                <div className="text-xs text-white/50 truncate">{userProfile.email}</div>
               </div>
             </div>
           </div>
@@ -377,7 +394,7 @@ export default function Dashboard({ onUpload, onUploadYoutube, onOpenNote, onWri
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
                 <div>
                   <h1 className="text-[26px] md:text-[32px] font-extrabold text-white flex items-center gap-3 leading-tight tracking-tight">
-                    Halo, Giovanno! <span className="text-3xl animate-bounce" style={{ animationIterationCount: 2 }}>👋</span>
+                    Halo, {firstName}! <span className="text-3xl animate-bounce" style={{ animationIterationCount: 2 }}>👋</span>
                   </h1>
                   <p className="text-white/50 mt-1 text-sm font-medium">{todayDate}</p>
                 </div>
@@ -721,7 +738,7 @@ export default function Dashboard({ onUpload, onUploadYoutube, onOpenNote, onWri
                     {/* Foto Profil */}
                     <div className="relative mb-6">
                       <div className="h-32 w-32 rounded-full bg-indigo-600 flex items-center justify-center text-5xl font-bold text-white border-4 border-[#202438] shadow-2xl">
-                        U
+                        {initials}
                       </div>
                       <button className="absolute bottom-0 right-0 h-10 w-10 rounded-full bg-[#202438] border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition shadow-lg">
                         <Camera className="h-5 w-5" />
@@ -729,7 +746,7 @@ export default function Dashboard({ onUpload, onUploadYoutube, onOpenNote, onWri
                     </div>
 
                     <h2 className="text-3xl font-bold text-white flex items-center gap-2 mb-8">
-                      User <Edit2 className="h-4 w-4 text-white/30 cursor-pointer hover:text-white transition" />
+                      {userProfile.name} <Edit2 className="h-4 w-4 text-white/30 cursor-pointer hover:text-white transition" />
                     </h2>
 
                     {/* Info List */}
@@ -737,7 +754,7 @@ export default function Dashboard({ onUpload, onUploadYoutube, onOpenNote, onWri
                       <div>
                         <label className="block text-xs font-bold text-white/30 uppercase tracking-widest mb-1">Email</label>
                         <div className="flex justify-between items-center text-white/80">
-                          <span className="truncate text-sm font-medium">giovannonathaniel0@gmail.com</span>
+                          <span className="truncate text-sm font-medium">{userProfile.email}</span>
                           <Edit2 className="h-3.5 w-3.5 text-white/20 cursor-pointer" />
                         </div>
                       </div>
