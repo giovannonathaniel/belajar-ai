@@ -327,14 +327,34 @@ export default function Dashboard({ onUpload, onUploadYoutube, onOpenNote, onWri
         
         {/* SIDEBAR DASHBOARD */}
         <aside className="w-full md:w-[300px] shrink-0 rounded-[22px] md:rounded-[28px] border border-white/10 bg-gradient-to-b from-[#202438] to-[#1b1f2d] shadow-2xl overflow-hidden flex flex-col relative">
-          <div 
-  onClick={onGoToLanding} 
-  className="flex items-center gap-2.5 px-4 md:px-6 pt-4 md:pt-6 pb-2 cursor-pointer hover:opacity-80 transition-opacity"
->
-            <div className="h-10 w-10 rounded-xl border border-white/15 bg-white/5 flex items-center justify-center">
-              <Sparkles className="h-5 w-5 text-white" />
+          
+          {/* HEADER SIDEBAR (Logo & Tombol Mobile) */}
+          <div className="flex items-center justify-between px-4 md:px-6 pt-4 md:pt-6 pb-2">
+            
+            {/* Bagian Kiri: Logo & Nama */}
+            <div 
+              onClick={onGoToLanding} 
+              className="flex items-center gap-2.5 cursor-pointer hover:opacity-80 transition-opacity"
+            >
+              <div className="h-10 w-10 rounded-xl border border-white/15 bg-white/5 flex items-center justify-center shrink-0">
+                <Sparkles className="h-5 w-5 text-white" />
+              </div>
+              <div className="text-2xl font-extrabold tracking-tight">belajar.ai</div>
             </div>
-            <div className="text-2xl font-extrabold tracking-tight">belajar.ai</div>
+
+            {/* Bagian Kanan: Tombol Join Khusus Mobile (md:hidden) */}
+            <button 
+              onClick={() => window.open("https://discord.com", "_blank")} 
+              className="md:hidden flex items-center gap-1.5 rounded-full bg-[#5865F2]/10 border border-[#5865F2]/30 px-3 py-1.5 hover:bg-[#5865F2]/20 transition-colors shrink-0"
+            >
+              <span className="text-[11px] font-bold text-[#FFFFFF]">Join Community</span>
+              <img 
+                src="https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/discord-round-color-icon.png" 
+                alt="Discord" 
+                className="h-3 w-3 object-contain opacity-80" 
+              />
+            </button>
+            
           </div>
 
           <nav className="p-3 md:p-4 md:flex-1">
@@ -373,6 +393,23 @@ export default function Dashboard({ onUpload, onUploadYoutube, onOpenNote, onWri
           </nav>
 
           <div className="hidden md:block p-5 border-t border-white/10 mt-auto">
+            
+            {/* --- TOMBOL JOIN COMMUNITY (DENGAN GAMBAR CUSTOM) --- */}
+            <button 
+              onClick={() => window.open("https://discord.com", "_blank")} 
+              className="w-full mb-3 rounded-[14px] bg-[#5865F2]/10 hover:bg-[#5865F2]/20 border border-[#5865F2]/30 px-4 py-2.5 flex items-center justify-between transition-all duration-300 group"
+            >
+              <span className="text-[13px] font-bold text-[#FFFFFF] group-hover:text-white transition-colors">Join Community</span>
+              
+              {/* Gambar Custom Logo Discord */}
+              <img 
+                src="https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/discord-round-color-icon.png" 
+                alt="Discord" 
+                className="h-4 w-4 object-contain opacity-80 group-hover:opacity-100 transition-opacity" 
+              />
+            </button>
+
+            {/* --- PROFIL USER --- */}
             <div className="flex items-center gap-3 rounded-2xl p-2 hover:bg-white/5 transition cursor-pointer">
               <img src={avatarUrl} alt="Profile" className="w-10 h-10 rounded-full bg-white/10 object-cover border border-white/10" />
               <div className="flex-1 overflow-hidden">
@@ -380,6 +417,7 @@ export default function Dashboard({ onUpload, onUploadYoutube, onOpenNote, onWri
                 <div className="text-xs text-white/50 truncate">{userProfile.email}</div>
               </div>
             </div>
+            
           </div>
         </aside>
 
