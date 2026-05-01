@@ -146,7 +146,7 @@ ${text.slice(0, 4000)}`;
           "X-Title": "belajar.ai"
         },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash", // 🔥 UBAH: Model Gemini tercepat dari OpenRouter
+          model: "openrouter/free", // 🔥 UBAH: Model Gemini tercepat dari OpenRouter
           messages: apiMessages,
           temperature: mode === "chat" ? 0.7 : 0.3,
           max_tokens: mode === "quiz" ? 5000 : mode === "summary" ? 5000 : mode === "chat" ? 1200 : 2500,
