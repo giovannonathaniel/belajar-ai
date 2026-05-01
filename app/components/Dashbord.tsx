@@ -178,7 +178,6 @@ const [showNotifPrompt, setShowNotifPrompt] = useState(true);
         allowLocalhostAsSecureOrigin: true, // Wajib diaktifkan saat testing di localhost
       });
       // Menampilkan prompt izin notifikasi ke user
-      OneSignal.Slidedown.promptPush(); 
     };
     runOneSignal();
 
