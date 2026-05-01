@@ -112,7 +112,8 @@ const GENERATION_COUNT_OPTIONS: GenerationCount[] = [15, 25, 30];
 
 
 export default function Dashboard({ onUpload, onUploadYoutube, onOpenNote, onWriteManual, onGoToLanding }: DashboardProps) {
-const [showNotifPrompt, setShowNotifPrompt] = useState(true);
+const [isMounted, setIsMounted] = useState(false);
+const [showNotifPrompt, setShowNotifPrompt] = useState(false); // Kita matikan default-nya
   // State untuk menyimpan event install browser
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   // State untuk memunculkan banner buatanmu
@@ -235,10 +236,14 @@ const [showNotifPrompt, setShowNotifPrompt] = useState(true);
     }
     setStreak(currentStreak); setBestStreak(maxStreak);
     if ("Notification" in window) {
-      if (Notification.permission !== "granted" && Notification.permission !== "denied") {
-        Notification.requestPermission();
+      const hasClickedAktifkan = localStorage.getItem("sudah_tekan_aktifkan");
+      if (Notification.permission !== "granted" && Notification.permission !== "denied" && !hasClickedAktifkan) {
+        setShowNotifPrompt(true);
       }
     }
+
+    // --- BERI SINYAL BAHWA HALAMAN SUDAH SIAP DIMUAT DI HP ---
+    setIsMounted(true);
   }, []);
 
   const calculateProgress = (targetDateStr: string, startDateStr: string) => {
@@ -321,6 +326,8 @@ const [showNotifPrompt, setShowNotifPrompt] = useState(true);
 
   const handleCustomSubscribe = async () => {
     setShowNotifPrompt(false);
+
+    localStorage.setItem("sudah_tekan_aktifkan", "true");
 
     if (typeof window !== 'undefined' && window.OneSignal) {
       try {
@@ -427,6 +434,10 @@ const [showNotifPrompt, setShowNotifPrompt] = useState(true);
     .toUpperCase() || "U";
   const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(userProfile.email || userProfile.name)}&backgroundColor=c0aede`;
 
+  if (!isMounted) {
+    return <div className="min-h-[100dvh] bg-[#11131f]"></div>; 
+  }
+  
   return (
     <div className="min-h-[100dvh] md:h-screen overflow-auto md:overflow-hidden bg-[#11131f] text-white relative">
       <div className="flex min-h-[100dvh] md:h-full flex-col md:flex-row p-2 md:p-4 gap-3 md:gap-4">
@@ -1427,7 +1438,7 @@ const [showNotifPrompt, setShowNotifPrompt] = useState(true);
             <span className="text-2xl">📱</span>
             <div>
               <p className="font-bold text-sm">Install belajar.ai</p>
-              <p className="text-xs text-blue-200">Akses lebih cepat dari layar HP kamu!</p>
+              <p className="text-xs text-blue-200">Akses lebih cepat dari device kamu!</p>
             </div>
           </div>
           <div className="flex gap-2">
