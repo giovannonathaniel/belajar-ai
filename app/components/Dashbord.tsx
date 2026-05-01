@@ -113,7 +113,26 @@ const GENERATION_COUNT_OPTIONS: GenerationCount[] = [15, 25, 30];
 
 export default function Dashboard({ onUpload, onUploadYoutube, onOpenNote, onWriteManual, onGoToLanding }: DashboardProps) {
 const [showNotifPrompt, setShowNotifPrompt] = useState(true);
-  
+  // State untuk menyimpan event install browser
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  // State untuk memunculkan banner buatanmu
+  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      // Mencegah Chrome memunculkan mini-infobar bawaannya yang jelek
+      e.preventDefault();
+      // Simpan event-nya ke dalam state
+      setDeferredPrompt(e);
+      // Munculkan banner buatanmu
+      setShowInstallPrompt(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
     // STATE NAVIGASI SIDEBAR
   const [activeSidebar, setActiveSidebar] = useState<"dashboard" | "study-guides" | "settings">("dashboard");
   
@@ -251,6 +270,23 @@ const [showNotifPrompt, setShowNotifPrompt] = useState(true);
         // Catat agar tidak spam hari ini
         localStorage.setItem("pdf_ai_last_notified", todayStr);
       }
+    }
+  };
+
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      // Munculkan pop-up asli dari Chrome (Add to Home screen)
+      deferredPrompt.prompt();
+      
+      // Tunggu jawaban user (di-install atau dicancel)
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        console.log('User menginstal aplikasi!');
+      }
+      
+      // Kosongkan state dan sembunyikan banner
+      setDeferredPrompt(null);
+      setShowInstallPrompt(false);
     }
   };
 
@@ -1379,6 +1415,33 @@ const [showNotifPrompt, setShowNotifPrompt] = useState(true);
               className="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-500 rounded-lg font-bold"
             >
               Aktifkan
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Banner PWA (Letakkan di dalam return, sebelum div penutup) */}
+      {showInstallPrompt && (
+        <div className="fixed top-0 left-0 right-0 bg-blue-600 text-white p-3 shadow-md z-[100] flex items-center justify-between px-5">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">📱</span>
+            <div>
+              <p className="font-bold text-sm">Install belajar.ai</p>
+              <p className="text-xs text-blue-200">Akses lebih cepat dari layar HP kamu!</p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button 
+              onClick={() => setShowInstallPrompt(false)}
+              className="px-3 py-1 text-sm bg-blue-800 hover:bg-blue-900 rounded-md"
+            >
+              Nanti
+            </button>
+            <button 
+              onClick={handleInstallClick}
+              className="px-3 py-1 text-sm bg-white text-blue-600 font-bold hover:bg-gray-200 rounded-md shadow"
+            >
+              Install
             </button>
           </div>
         </div>

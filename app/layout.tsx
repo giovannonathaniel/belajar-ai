@@ -8,6 +8,7 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "belajar.ai - Platform Pembelajaran AI #1 di Indonesia",
   description: "Aplikasi pembelajaran AI",
+  manifest: '/manifest.json',
 };
 
 export const viewport: Viewport = {
