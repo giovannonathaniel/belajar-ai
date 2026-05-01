@@ -84,7 +84,8 @@ Setiap objek dalam array harus memiliki struktur ini:
   "options": ["Pilihan A", "Pilihan B", "Pilihan C", "Pilihan D"],
   "answer": 0,
   "hint": "Petunjuk singkat untuk menjawab soal"
-}`;
+}
+PENTING: DILARANG KERAS MENGUBAH NAMA KEY JSON! TETAP GUNAKAN "question", "options", "answer", DAN "hint" DALAM BAHASA INGGRIS.`;
       userPrompt = `Buat tepat ${generationCount} soal pilihan ganda dari teks berikut.
 Pastikan output berupa JSON Array valid yang bisa langsung di-JSON.parse.
 
@@ -103,7 +104,8 @@ Struktur JSON harus seperti ini:
 {
   "title": "Judul/Topik Utama Dokumen",
   "nodes": ["Subtopik Utama 1", "Subtopik Utama 2", "Subtopik Utama 3", "Subtopik Utama 4", "Subtopik Utama 5"]
-}`;
+}
+PENTING: DILARANG KERAS MENGUBAH NAMA KEY JSON! TETAP GUNAKAN "title" DAN "nodes" DALAM BAHASA INGGRIS.`;
       userPrompt = `Ekstrak hierarki materi dari teks berikut menjadi format JSON mind map:\n\n${text.slice(0, 3000)}`;
       apiMessages = [
         { role: "system", content: systemPrompt },
@@ -142,11 +144,12 @@ ${text.slice(0, 4000)}`;
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
-          "HTTP-Referer": "https://belajar-ai.vercel.app", 
+          "HTTP-Referer": "https://belajarai.vercel.app", 
           "X-Title": "belajar.ai"
         },
         body: JSON.stringify({
-          model: "openrouter/free", // 🔥 UBAH: Model Gemini tercepat dari OpenRouter
+          // 🔥 UBAH: Paste ID yang baru saja Bos copy dari web OpenRouter di sini
+          model: "google/gemini-2.0-flash-001", 
           messages: apiMessages,
           temperature: mode === "chat" ? 0.7 : 0.3,
           max_tokens: mode === "quiz" ? 5000 : mode === "summary" ? 5000 : mode === "chat" ? 1200 : 2500,
@@ -173,6 +176,7 @@ ${text.slice(0, 4000)}`;
     if (mode === "quiz" || mode === "mindmap") {
       try {
         const cleanJson = mode === "quiz" ? extractJsonBlock(result, "[", "]") : extractJsonBlock(result, "{", "}");
+        console.log(`=== HASIL JSON ${mode} ===`, cleanJson);
         const parsedData = JSON.parse(cleanJson);
         if (mode === "quiz") {
           const quiz = normalizeQuizItems(parsedData, generationCount);

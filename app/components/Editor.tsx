@@ -309,15 +309,25 @@ const [loadingProgress, setLoadingProgress] = useState(0);
     const truncatedText = textToProcess.slice(0, 4000);
     setRawText(truncatedText);
 
-    const [flashRes, summaryRes, quizRes, mindmapRes] = await Promise.all([
-      fetch("/api/flashcard", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: truncatedText, mode: "flashcard", count: initialGenerationCount }) }),
-      fetch("/api/flashcard", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: truncatedText, mode: "summary" }) }),
-      fetch("/api/flashcard", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: truncatedText, mode: "quiz", count: initialGenerationCount }) }),
-      fetch("/api/flashcard", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: truncatedText, mode: "mindmap" }) })
-    ]);
+    // 1. Buat fungsi delay kecil
+    const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-    const [flashRaw, summaryRaw, quizRaw, mindmapRaw] = await Promise.all([flashRes.text(), summaryRes.text(), quizRes.text(), mindmapRes.text()]);
+    // 2. Antre request satu per satu, beri napas 2 detik setiap selesai
+    const flashRes = await fetch("/api/flashcard", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: truncatedText, mode: "flashcard", count: initialGenerationCount }) });
+    const flashRaw = await flashRes.text();
+    await delay(2000); // Jeda 2 detik
 
+    const summaryRes = await fetch("/api/flashcard", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: truncatedText, mode: "summary" }) });
+    const summaryRaw = await summaryRes.text();
+    await delay(2000); // Jeda 2 detik
+
+    const quizRes = await fetch("/api/flashcard", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: truncatedText, mode: "quiz", count: initialGenerationCount }) });
+    const quizRaw = await quizRes.text();
+    await delay(2000); // Jeda 2 detik
+
+    const mindmapRes = await fetch("/api/flashcard", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: truncatedText, mode: "mindmap" }) });
+    const mindmapRaw = await mindmapRes.text();
+    
     let flashData: ApiResponse = {}; let summaryData: ApiResponse = {}; let quizData: ApiResponse = {}; let mapData: ApiResponse = {};
     try { flashData = JSON.parse(flashRaw); } catch {}
     try { summaryData = JSON.parse(summaryRaw); } catch {}
