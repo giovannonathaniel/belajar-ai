@@ -1,5 +1,5 @@
 "use client";
-
+import OneSignal from 'react-onesignal';
 import { useEffect, useRef, useState } from "react";
 import {
   BookOpen,
@@ -170,6 +170,16 @@ export default function Dashboard({ onUpload, onUploadYoutube, onOpenNote, onWri
       }
     } catch { setHistory([]); }
 
+    const runOneSignal = async () => {
+      await OneSignal.init({
+        appId: "65151910-c29a-4fc8-a765-fd3479eb9d6e", 
+        allowLocalhostAsSecureOrigin: true, // Wajib diaktifkan saat testing di localhost
+      });
+      // Menampilkan prompt izin notifikasi ke user
+      OneSignal.Slidedown.promptPush(); 
+    };
+    runOneSignal();
+
     const savedExamDate = localStorage.getItem("pdf_ai_exam_date");
     const savedStartDate = localStorage.getItem("pdf_ai_exam_start");
 
@@ -204,6 +214,11 @@ export default function Dashboard({ onUpload, onUploadYoutube, onOpenNote, onWri
        currentStreak = 1; localStorage.setItem("pdf_ai_streak", currentStreak.toString()); localStorage.setItem("pdf_ai_last_login", todayStr);
     }
     setStreak(currentStreak); setBestStreak(maxStreak);
+    if ("Notification" in window) {
+      if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+        Notification.requestPermission();
+      }
+    }
   }, []);
 
   const calculateProgress = (targetDateStr: string, startDateStr: string) => {
@@ -211,10 +226,31 @@ export default function Dashboard({ onUpload, onUploadYoutube, onOpenNote, onWri
     const start = new Date(startDateStr).getTime();
     const now = new Date().getTime();
     const diff = Math.max(0, target - now);
-    setDaysLeft(Math.ceil(diff / (1000 * 60 * 60 * 24)));
+    const calculatedDaysLeft = Math.ceil(diff / (1000 * 60 * 60 * 24));
+    
+    setDaysLeft(calculatedDaysLeft);
 
     let pct = (target - start) > 0 ? ((now - start) / (target - start)) * 100 : 100;
     setExamProgress(Math.min(100, Math.max(0, pct)));
+
+    // LOGIKA NOTIFIKASI
+    if (calculatedDaysLeft > 0 && calculatedDaysLeft <= 7) {
+      const todayStr = new Date().toLocaleDateString("en-CA"); // Format YYYY-MM-DD
+      const lastNotified = localStorage.getItem("pdf_ai_last_notified");
+
+      // Cek izin dan pastikan belum dinotifikasi hari ini
+      if ("Notification" in window && Notification.permission === "granted" && lastNotified !== todayStr) {
+        
+        // Panggil Notifikasi Asli (Native)
+        new Notification("Ayo Belajar! 🚀", {
+          body: `Ujianmu tinggal ${calculatedDaysLeft} hari lagi! Yuk mulai fokus belajar hari ini.`,
+          icon: "/favicon.ico", // Pastikan kamu punya ikon ini di folder public
+        });
+
+        // Catat agar tidak spam hari ini
+        localStorage.setItem("pdf_ai_last_notified", todayStr);
+      }
+    }
   };
 
   const handleSaveExamDate = (e: React.FormEvent) => {
@@ -223,7 +259,26 @@ export default function Dashboard({ onUpload, onUploadYoutube, onOpenNote, onWri
       const startDate = new Date().toISOString();
       localStorage.setItem("pdf_ai_exam_date", tempExamDate);
       localStorage.setItem("pdf_ai_exam_start", startDate);
-      setExamDate(tempExamDate); calculateProgress(tempExamDate, startDate); setShowExamModal(false);
+      setExamDate(tempExamDate); 
+      calculateProgress(tempExamDate, startDate); 
+      setShowExamModal(false);
+
+      if (OneSignal.User) {
+        const examDate = new Date(tempExamDate);
+        const examTimestamp = Math.floor(examDate.getTime() / 1000);
+
+        // Hitung waktu H-7 (7 hari sebelum ujian)
+        const startDate = new Date(examDate);
+        startDate.setDate(startDate.getDate() - 7);
+        startDate.setHours(8, 0, 0, 0); // Notif muncul jam 8 pagi
+        const startTimestamp = Math.floor(startDate.getTime() / 1000);
+
+        // Kirim dua tag sekaligus
+        OneSignal.User.addTags({
+          "start_pengingat": startTimestamp.toString(), // Pemicu MULAI
+          "target_ujian": examTimestamp.toString()       // Pemicu BERHENTI
+        });
+      }
     }
   };
 
@@ -1224,7 +1279,7 @@ export default function Dashboard({ onUpload, onUploadYoutube, onOpenNote, onWri
 
             {/* Headers */}
             <h2 className="text-3xl md:text-4xl font-extrabold text-white text-center mb-3">Upgrade to Premium</h2>
-            <p className="text-white/70 text-center mb-10 text-[15px]">Join <b className="text-white">10,000,000+</b> students learning smarter with belajar.ai</p>
+            <p className="text-white/70 text-center mb-10 text-[15px]">Join <b className="text-white">1,000,000+</b> students learning smarter with belajar.ai</p>
 
             {/* Features List */}
             <div className="space-y-4 mb-10 max-w-[480px] mx-auto">
@@ -1286,7 +1341,7 @@ export default function Dashboard({ onUpload, onUploadYoutube, onOpenNote, onWri
             </button>
             
             <p className="text-center text-white/40 text-xs mt-6">
-              Join 10 million people studying smarter with belajar.ai
+              Join 1 million people studying smarter with belajar.ai
             </p>
           </div>
         </div>

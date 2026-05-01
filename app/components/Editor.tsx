@@ -6,7 +6,7 @@ import {
   FileCode2, FileText, Folder, Heading1, Heading2, Heading3, HelpCircle, Italic, LayoutGrid,
   Lightbulb, Link2, List, ListOrdered, MessageCircle, MessageSquare, Minus, Pause, PenLine,
   Play, Plus, Quote, RefreshCw, RotateCcw, RotateCw, Send, Settings, Sparkles, Strikethrough,
-  Table2, Target, Underline, Upload, User, PlayCircle
+  Table2, Target, Underline, Upload, User, PlayCircle, Check, X
 } from "lucide-react";
 
 type Flashcard = { question: string; answer: string };
@@ -55,9 +55,42 @@ function escapeHtml(text: string) {
 }
 
 function markdownToHtml(text: string) {
-  const safe = escapeHtml(text);
-  const withBold = safe.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-  return withBold.replace(/\*(.+?)\*/g, "<em>$1</em>").split("\n").map((line) => (line.trim() ? `<p>${line}</p>` : "<br/>")).join("");
+  if (!text) return "";
+  let safe = escapeHtml(text);
+
+  // 1. Ubah tanda # menjadi Heading dengan styling CSS Tailwind yang rapi
+  safe = safe.replace(/^###\s+(.*)/gm, '<h3 class="text-lg font-bold text-white mt-5 mb-2">$1</h3>');
+  safe = safe.replace(/^##\s+(.*)/gm, '<h2 class="text-xl font-extrabold text-indigo-400 mt-6 mb-3">$1</h2>');
+  safe = safe.replace(/^#\s+(.*)/gm, '<h1 class="text-2xl font-black text-[#5546ED] mt-8 mb-4">$1</h1>');
+
+  // 2. Ubah tanda bintang menjadi Bold & Italic
+  safe = safe.replace(/\*\*(.+?)\*\*/g, '<strong class="text-white">$1</strong>');
+  safe = safe.replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+  // 3. Proses tiap baris agar peluru (bullet) dan angka tertata rapi
+  return safe.split("\n").map((line) => {
+    const trimmed = line.trim();
+    if (!trimmed) return "<br/>";
+    
+    // Jika baris ini sudah diubah jadi Heading (H1/H2/H3), biarkan saja
+    if (trimmed.startsWith("<h")) return trimmed;
+    
+    // Deteksi Bullet Points (* atau -)
+    if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
+      return `<div class="ml-5 flex gap-3 mb-2"><span class="text-[#5546ED] font-black mt-0.5">•</span> <span class="leading-relaxed">${trimmed.substring(2)}</span></div>`;
+    }
+    
+    // Deteksi Angka List (1. 2. 3. dst)
+    if (/^\d+\.\s/.test(trimmed)) {
+      const numMatch = trimmed.match(/^(\d+\.)\s(.*)/);
+      if (numMatch) {
+        return `<div class="ml-5 flex gap-2 mb-2"><span class="text-indigo-400 font-black">${numMatch[1]}</span> <span class="leading-relaxed">${numMatch[2]}</span></div>`;
+      }
+    }
+    
+    // Paragraf biasa
+    return `<p class="mb-3 leading-relaxed">${trimmed}</p>`;
+  }).join("");
 }
 
 function stripExtension(fileName: string) { return fileName.replace(/\.[^/.]+$/, ""); }
@@ -89,7 +122,9 @@ export default function Editor({ initialFile, initialYoutubeUrl, initialFileKey,
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isHistoryLoaded, setIsHistoryLoaded] = useState(false);
   const [showGenerationLoading, setShowGenerationLoading] = useState(() => Boolean(initialFile || initialYoutubeUrl));
-
+const [loadingProgress, setLoadingProgress] = useState(0);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<"annual" | "monthly">("annual");
   // States UI
   const [currentFlashIdx, setCurrentFlashIdx] = useState(0);
   const [flashFlipped, setFlashFlipped] = useState(false);
@@ -105,8 +140,29 @@ export default function Editor({ initialFile, initialYoutubeUrl, initialFileKey,
   const [isTimerOpen, setIsTimerOpen] = useState(false);
   const [timeLeft, setTimeLeft] = useState(25 * 60);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [timerDuration, setTimerDuration] = useState(25 * 60); 
+  const [showTimerSettings, setShowTimerSettings] = useState(false);
   const summaryRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // EFEK SIMULASI PROGRESS BAR DINAMIS
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (showGenerationLoading) {
+      setLoadingProgress(0);
+      interval = setInterval(() => {
+        setLoadingProgress((prev) => {
+          if (prev >= 98) return 98; // Mentok di 98% sampai proses beneran selesai
+          // Di bawah 50% akan sangat cepat, di atas 50% akan melambat natural
+          const increment = prev < 50 ? Math.floor(Math.random() * 15) + 5 : Math.floor(Math.random() * 3) + 1;
+          return Math.min(prev + increment, 98);
+        });
+      }, 600);
+    } else {
+      setLoadingProgress(100); // Langsung 100% jika loading selesai
+    }
+    return () => clearInterval(interval);
+  }, [showGenerationLoading]);
 
   useEffect(() => { return () => { if (pdfUrl) URL.revokeObjectURL(pdfUrl); }; }, [pdfUrl]);
 
@@ -164,7 +220,16 @@ export default function Editor({ initialFile, initialYoutubeUrl, initialFileKey,
 
   const formatTime = (sec: number) => `${Math.floor(sec / 60).toString().padStart(2, "0")}:${(sec % 60).toString().padStart(2, "0")}`;
   const toggleTimer = () => setIsTimerRunning(!isTimerRunning);
-  const resetTimer = () => { setIsTimerRunning(false); setTimeLeft(25 * 60); };
+  const resetTimer = () => { setIsTimerRunning(false); setTimeLeft(timerDuration); };
+  
+  const handleSetTimer = (minutes: number) => {
+    const newSeconds = minutes * 60;
+    setTimerDuration(newSeconds);
+    setTimeLeft(newSeconds);
+    setIsTimerRunning(false);
+    setShowTimerSettings(false); // Tutup menu setting otomatis setelah memilih
+  };
+  
 
   const getFileKey = (file: File) => `${file.name}__${file.size}__${file.lastModified}`;
 
@@ -437,9 +502,60 @@ export default function Editor({ initialFile, initialYoutubeUrl, initialFileKey,
 
   const handleSendChatForm = (e: React.FormEvent) => { e.preventDefault(); sendMessage(chatInput); setChatInput(""); };
 
+  // --- UI MODAL PREMIUM (Dipisah agar bisa dipanggil dari banyak tempat) ---
+  const upgradeModalUI = showUpgradeModal && (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-3 md:p-4 animate-in fade-in duration-300">
+      <div className="bg-[#1f2029] border border-white/10 rounded-[28px] shadow-2xl w-full max-w-[600px] max-h-[92dvh] overflow-y-auto relative p-6 md:p-10 animate-in zoom-in-95 duration-300 text-left">
+        {/* Close Button */}
+        <button onClick={() => setShowUpgradeModal(false)} className="absolute top-6 right-6 text-white/40 hover:text-white transition">
+          <X className="h-6 w-6" />
+        </button>
+
+        {/* Headers */}
+        <h2 className="text-3xl md:text-4xl font-extrabold text-white text-center mb-3">Upgrade to Premium</h2>
+        <p className="text-white/70 text-center mb-10 text-[15px]">Join <b className="text-white">1,000,000+</b> students learning smarter with belajar.ai</p>
+
+        {/* Features List */}
+        <div className="space-y-4 mb-10 max-w-[480px] mx-auto">
+          <div className="flex items-start gap-3"><Check className="h-5 w-5 text-white shrink-0" /><p className="text-white/90 text-sm"><b className="text-white">Unlimited uploads</b> — PDFs, lectures, videos — all processed by AI</p></div>
+          <div className="flex items-start gap-3"><Check className="h-5 w-5 text-white shrink-0" /><p className="text-white/90 text-sm"><b className="text-white">Unlimited quizzes & flashcards</b> — Auto-generated from your material</p></div>
+          <div className="flex items-start gap-3"><Check className="h-5 w-5 text-white shrink-0" /><p className="text-white/90 text-sm"><b className="text-white">AI tutor 24/7</b> — Ask anything, understand everything</p></div>
+          <div className="flex items-start gap-3"><Check className="h-5 w-5 text-white shrink-0" /><p className="text-white/90 text-sm"><b className="text-white">Unlimited study podcasts</b> — Learn on the go, anytime</p></div>
+          <div className="flex items-start gap-3"><Check className="h-5 w-5 text-white shrink-0" /><p className="text-white/90 text-sm"><b className="text-white">Faster AI</b> — Notes and edits in seconds</p></div>
+        </div>
+
+        {/* Pricing Cards */}
+        <div className="grid grid-cols-2 gap-4 mb-8">
+          <div onClick={() => setSelectedPlan("annual")} className={`relative rounded-2xl p-5 cursor-pointer transition-all duration-200 border-2 ${selectedPlan === "annual" ? "bg-[#5a8b5e]/20 border-[#6fb073]" : "bg-white/5 border-transparent hover:bg-white/10"}`}>
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#7c5fba] text-white text-xs font-bold px-4 py-1 rounded-full whitespace-nowrap">50% off</div>
+            <div className="text-center mt-2">
+              <div className="text-white font-bold mb-2">Annual</div>
+              <div className="text-3xl font-extrabold text-white mb-2">Rp 30.000 <span className="text-sm text-white/50 font-medium">/ mo</span></div>
+              <div className="text-xs text-white/60">billed yearly · Rp 1.000/day</div>
+            </div>
+          </div>
+          <div onClick={() => setSelectedPlan("monthly")} className={`rounded-2xl p-5 cursor-pointer transition-all duration-200 border-2 mt-2 md:mt-0 ${selectedPlan === "monthly" ? "bg-[#5a8b5e]/20 border-[#6fb073]" : "bg-[#2a2c36] border-transparent hover:bg-[#333541]"}`}>
+            <div className="text-center mt-2">
+              <div className="text-white font-bold mb-2">Monthly</div>
+              <div className="text-3xl font-extrabold text-white mb-2">Rp 60.000 <span className="text-sm text-white/50 font-medium">/ mo</span></div>
+              <div className="text-xs text-white/60">billed monthly · Rp 2.000/day</div>
+            </div>
+          </div>
+        </div>
+
+        {/* CTA Button */}
+        <button className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#8869c9] to-[#6d54a5] hover:opacity-90 text-white font-bold text-lg flex items-center justify-center gap-2 transition-opacity shadow-lg shadow-purple-900/20">
+          <Sparkles className="h-5 w-5" /> Upgrade Now
+        </button>
+        <p className="text-center text-white/40 text-xs mt-6">Join 1 million people studying smarter with belajar.ai</p>
+      </div>
+    </div>
+  );
+
+  // --- TAMPILAN LAYAR LOADING KETIKA PROSES AI BERJALAN ---
   if (showGenerationLoading) {
     return (
-      <div className="h-screen overflow-hidden bg-[#11131f] text-white flex items-center justify-center px-6">
+      <div className="h-screen overflow-hidden bg-[#11131f] text-white flex items-center justify-center px-6 relative">
         <div className="w-full max-w-[420px] text-center">
           <div className="relative mx-auto mb-8 h-24 w-24">
             <div className="absolute inset-0 rounded-[28px] border border-[#5546ED]/30 bg-[#5546ED]/10 shadow-2xl shadow-[#5546ED]/20" />
@@ -447,14 +563,36 @@ export default function Editor({ initialFile, initialYoutubeUrl, initialFileKey,
               <RefreshCw className="h-9 w-9 text-[#7c6cff] animate-spin" />
             </div>
           </div>
+          
           <h1 className="text-[28px] font-black tracking-tight mb-3">Sedang membuat materi belajar</h1>
           <p className="text-white/55 text-[15px] leading-relaxed mb-7">
-            AI sedang mengekstrak dokumen, membuat ringkasan, flashcards, quiz, dan mind map. Editor akan terbuka otomatis setelah semuanya selesai.
+            AI sedang mengekstrak dokumen, membuat ringkasan, flashcards, quiz, dan mind map.
           </p>
-          <div className="h-2 w-full rounded-full bg-white/5 overflow-hidden">
-            <div className="h-full w-1/2 rounded-full bg-[#5546ED] animate-pulse" />
+
+          {/* PROGRESS BAR DINAMIS */}
+          <div className="mb-2 flex justify-between text-xs font-bold text-white/50">
+            <span>Memproses AI...</span>
+            <span>{loadingProgress}%</span>
           </div>
+          <div className="h-2 w-full rounded-full bg-white/5 overflow-hidden">
+            <div 
+              className="h-full rounded-full bg-gradient-to-r from-[#5546ED] to-[#7c6cff] transition-all duration-500 ease-out" 
+              style={{ width: `${loadingProgress}%` }} 
+            />
+          </div>
+
+          {/* TOMBOL UPGRADE SAAT LOADING */}
+          <button 
+            onClick={() => setShowUpgradeModal(true)} 
+            className="mt-8 px-5 py-2.5 rounded-full bg-[#7c5fba]/10 border border-[#7c5fba]/20 text-[#cbb8fc] hover:text-white text-sm font-semibold hover:bg-[#7c5fba]/20 transition flex items-center justify-center gap-2 mx-auto shadow-lg shadow-purple-500/5"
+          >
+            <Sparkles className="h-4 w-4" /> Upgrade ke Pro buat proses lebih cepat
+          </button>
+
         </div>
+        
+        {/* Render Modal jika di-klik */}
+        {upgradeModalUI}
       </div>
     );
   }
@@ -472,7 +610,7 @@ export default function Editor({ initialFile, initialYoutubeUrl, initialFileKey,
           </div>
           <div className="p-2 md:p-3 border-b border-white/10"><button onClick={onBack} className="w-full rounded-[14px] py-2.5 md:py-3 px-4 flex items-center gap-3 text-left hover:bg-white/5 transition"><ArrowLeft className="h-5 w-5 text-white/80" /><span className="text-[15px] font-bold">Kembali</span></button></div>
           <nav className="p-2 md:p-3 md:flex-1 overflow-x-auto"><div className="flex md:block gap-2 md:space-y-1.5 min-w-max md:min-w-0">{navItems.map((item) => { const Icon = item.icon; const active = item.label === activeTab; return (<button key={item.label} onClick={() => setActiveTab(item.label)} className={`shrink-0 md:w-full rounded-[14px] px-3 md:px-4 py-2.5 flex items-center gap-2 md:gap-3 text-left transition ${active ? "bg-[#5546ED] text-white shadow-lg shadow-[#5546ED]/20" : "hover:bg-white/5 text-white/70"}`}><Icon className={`h-4 w-4 ${active ? "text-white" : "text-white/80"}`} /><span className="text-[13px] md:text-[14px] font-semibold whitespace-nowrap">{item.label}</span></button>); })}</div></nav>
-          <div className="hidden md:block p-4 border-t border-white/10"><button className="w-full rounded-[14px] bg-[#5546ED] hover:bg-[#4A28C1] transition py-3 text-[14px] font-bold flex items-center justify-center gap-2 text-white shadow-lg shadow-[#5546ED]/20"><Sparkles className="h-4 w-4" />Upgrade</button></div>
+          <div className="hidden md:block p-4 border-t border-white/10"><button onClick={() => setShowUpgradeModal(true)} className="w-full rounded-[14px] bg-[#5546ED] hover:bg-[#4A28C1] transition py-3 text-[14px] font-bold flex items-center justify-center gap-2 text-white shadow-lg shadow-[#5546ED]/20"><Sparkles className="h-4 w-4" />Upgrade</button></div>
           <div className="hidden md:block px-4 pb-4 relative">
   
   {/* 1. PLACEHOLDER (Tak Terlihat) */}
@@ -504,17 +642,48 @@ export default function Editor({ initialFile, initialYoutubeUrl, initialFileKey,
     </div>
     
     {/* Isi Timer - Tetap Sama */}
+    {/* Isi Timer */}
     {isTimerOpen && (
       <div className="p-5 flex flex-col items-center animate-in fade-in zoom-in-95 duration-300">
-        <div className="text-[36px] font-black tracking-tighter text-white mb-4 font-mono leading-none">{formatTime(timeLeft)}</div>
+        
+        {/* Render Teks Waktu ATAU Menu Pilihan Waktu */}
+        {showTimerSettings ? (
+          <div className="w-full mb-4 flex flex-col items-center animate-in fade-in">
+            <div className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-3">Pilih Durasi Fokus</div>
+            <div className="flex justify-center gap-2 w-full">
+              {[15, 25, 50].map((mins) => (
+                <button 
+                  key={mins} 
+                  onClick={() => handleSetTimer(mins)} 
+                  className={`flex-1 py-2 rounded-[10px] text-[13px] font-bold transition-all ${timerDuration === mins * 60 ? 'bg-[#5546ED] text-white shadow-md shadow-[#5546ED]/20' : 'bg-white/5 text-white/50 hover:bg-white/10 hover:text-white'}`}
+                >
+                  {mins}m
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="text-[36px] font-black tracking-tighter text-white mb-4 font-mono leading-none">
+            {formatTime(timeLeft)}
+          </div>
+        )}
+
         <div className="flex items-center gap-3">
+          {/* Tombol Reset */}
           <button onClick={resetTimer} className="h-10 w-10 rounded-full border border-white/10 bg-white/5 flex items-center justify-center hover:bg-white/10 transition text-white/70 hover:text-white">
             <RotateCcw className="h-4 w-4" />
           </button>
+          
+          {/* Tombol Play/Pause */}
           <button onClick={toggleTimer} className="h-12 w-12 rounded-full bg-[#5546ED] hover:bg-[#4A28C1] flex items-center justify-center transition shadow-lg shadow-[#5546ED]/20 text-white">
             {isTimerRunning ? <Pause className="h-5 w-5 fill-current" /> : <Play className="h-5 w-5 fill-current ml-0.5" />}
           </button>
-          <button className="h-10 w-10 rounded-full border border-white/10 bg-white/5 flex items-center justify-center hover:bg-white/10 transition text-white/70 hover:text-white">
+          
+          {/* Tombol Settings */}
+          <button 
+            onClick={() => setShowTimerSettings(!showTimerSettings)} 
+            className={`h-10 w-10 rounded-full border border-white/10 flex items-center justify-center transition ${showTimerSettings ? 'bg-white/20 text-white' : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white'}`}
+          >
             <Settings className="h-4 w-4" />
           </button>
         </div>
@@ -678,6 +847,7 @@ export default function Editor({ initialFile, initialYoutubeUrl, initialFileKey,
       </div>
 
       <input ref={fileInputRef} type="file" accept=".pdf, .pptx" onChange={handleUpload} className="hidden" />
+    {upgradeModalUI}
     </div>
   );
 }

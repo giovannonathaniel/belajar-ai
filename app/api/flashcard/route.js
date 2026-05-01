@@ -35,11 +35,12 @@ function normalizeQuizItems(value, limit) {
 
 export async function POST(req) {
   try {
-    const token = process.env.HF_TOKEN;
+    // 🔥 UBAH: Menggunakan OPENROUTER_API_KEY
+    const token = process.env.OPENROUTER_API_KEY;
 
     if (!token) {
       return NextResponse.json(
-        { error: "HF_TOKEN belum ada di .env.local" },
+        { error: "OPENROUTER_API_KEY belum ada di .env.local" },
         { status: 500 }
       );
     }
@@ -61,15 +62,21 @@ export async function POST(req) {
     // 🔥 LOGIKA UNTUK MASING-MASING MODE
     if (mode === "summary") {
       systemPrompt =
-        "Kamu merangkum teks secara jelas dan mudah dipahami dengan poin-poin, minimal 500 kata. Anda hanya boleh berikan output berupa ringkasan tanpa embel-embel teknis lain misal total kata, dan sebagainya.";
-      userPrompt = `Buat ringkasan dari teks berikut.\nGunakan bullet points.\n\nTeks:\n${text.slice(0, 3000)}`;
+        "Kamu adalah asisten akademik ahli. Buat ringkasan yang SANGAT PANJANG, MENDETAIL, dan KOMPREHENSIF. WAJIB LANGSUNG KE ISI MATERI. DILARANG KERAS membuat Judul Utama di awal (seperti '# Ringkasan...'). Langsung mulai dengan Sub-judul (##) atau poin materi.";
+      
+      userPrompt = `Buat ringkasan komprehensif dari teks berikut.
+Jangan buat judul utama. Gunakan subjudul (##), bullet points (*), dan list angka (1.).
+
+Teks:
+${text.slice(0, 25000)}`;
+      
       apiMessages = [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
       ];
 
     } else if (mode === "quiz") {
-      systemPrompt = `Kamu adalah pembuat soal kuis pilihan ganda.
+      systemPrompt = `Kamu adalah pembuat soal kuis pilihan ganda sesuai bahasa dari teks yang diberikan, kamu hanya fokus ke materinya jangan buat untuk nama penulis, judul dan sebagainya.
 WAJIB: Hasilkan output HANYA dalam format JSON Array yang valid. Jangan berikan teks pembuka, penutup, markdown, atau komentar.
 Setiap objek dalam array harus memiliki struktur ini:
 {
@@ -90,7 +97,7 @@ ${text.slice(0, 3000)}`;
 
     } else if (mode === "mindmap") {
       // 🔥 LOGIKA KHUSUS MIND MAP
-      systemPrompt = `Kamu adalah ahli pembuat mind map. 
+      systemPrompt = `Kamu adalah ahli pembuat mind map sesuai bahasa dari teks yang diberikan. 
 WAJIB: Hasilkan output HANYA dalam format JSON murni tanpa markdown pembungkus.
 Struktur JSON harus seperti ini:
 {
@@ -119,7 +126,7 @@ ${text.slice(0, 4000)}`;
 
     } else {
       // default flashcard
-      systemPrompt = "Kamu membuat flashcard. Format WAJIB: Q: ... A: ... TANPA PENJELASAN LAIN.";
+      systemPrompt = "Kamu membuat flashcard sesuai bahasa dari teks yang diberikan dan fokus ke materinya, jangan ke hal lain misalnya nama penulis dan sebagainya. Format WAJIB: Q: ... A: ... TANPA PENJELASAN LAIN.";
       userPrompt = `Buat tepat ${generationCount} flashcard dari teks berikut:\n\n${text.slice(0, 3000)}`;
       apiMessages = [
         { role: "system", content: systemPrompt },
@@ -127,19 +134,22 @@ ${text.slice(0, 4000)}`;
       ];
     }
 
+    // 🔥 UBAH: Endpoint API dan Headers disesuaikan untuk OpenRouter
     const response = await fetch(
-      "https://router.huggingface.co/v1/chat/completions",
+      "https://openrouter.ai/api/v1/chat/completions",
       {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
+          "HTTP-Referer": "https://belajar-ai.vercel.app", 
+          "X-Title": "belajar.ai"
         },
         body: JSON.stringify({
-          model: "openai/gpt-oss-20b", 
+          model: "google/gemini-2.5-flash", // 🔥 UBAH: Model Gemini tercepat dari OpenRouter
           messages: apiMessages,
           temperature: mode === "chat" ? 0.7 : 0.3,
-          max_tokens: mode === "quiz" ? 5000 : mode === "chat" ? 1200 : 2500,
+          max_tokens: mode === "quiz" ? 5000 : mode === "summary" ? 5000 : mode === "chat" ? 1200 : 2500,
         }),
       }
     );
