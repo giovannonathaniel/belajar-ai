@@ -193,13 +193,15 @@ const [showNotifPrompt, setShowNotifPrompt] = useState(false); // Kita matikan d
     } catch { setHistory([]); }
 
     const runOneSignal = async () => {
-      await OneSignal.init({
-        appId: "65151910-c29a-4fc8-a765-fd3479eb9d6e", 
-        allowLocalhostAsSecureOrigin: true, // Wajib diaktifkan saat testing di localhost
-      });
-      // Menampilkan prompt izin notifikasi ke user
-    };
-    runOneSignal();
+  // Tambahkan pengecekan ini agar tidak crash saat HP bangun dari sleep
+  if (!(OneSignal as any).initialized) {
+    await OneSignal.init({
+      appId: "65151910-c29a-4fc8-a765-fd3479eb9d6e", 
+      allowLocalhostAsSecureOrigin: true,
+    });
+  }
+};
+runOneSignal();
 
     const savedExamDate = localStorage.getItem("pdf_ai_exam_date");
     const savedStartDate = localStorage.getItem("pdf_ai_exam_start");
@@ -254,26 +256,36 @@ const [showNotifPrompt, setShowNotifPrompt] = useState(false); // Kita matikan d
     const calculatedDaysLeft = Math.ceil(diff / (1000 * 60 * 60 * 24));
     
     setDaysLeft(calculatedDaysLeft);
-
     let pct = (target - start) > 0 ? ((now - start) / (target - start)) * 100 : 100;
     setExamProgress(Math.min(100, Math.max(0, pct)));
 
-    // LOGIKA NOTIFIKASI
+    // LOGIKA NOTIFIKASI (SUDAH ANTI-CRASH DI HP)
     if (calculatedDaysLeft > 0 && calculatedDaysLeft <= 7) {
       const todayStr = new Date().toLocaleDateString("en-CA"); // Format YYYY-MM-DD
       const lastNotified = localStorage.getItem("pdf_ai_last_notified");
-
-      // Cek izin dan pastikan belum dinotifikasi hari ini
+      
       if ("Notification" in window && Notification.permission === "granted" && lastNotified !== todayStr) {
-        
-        // Panggil Notifikasi Asli (Native)
-        new Notification("Ayo Belajar! 🚀", {
-          body: `Ujianmu tinggal ${calculatedDaysLeft} hari lagi! Yuk mulai fokus belajar hari ini.`,
-          icon: "/favicon.ico", // Pastikan kamu punya ikon ini di folder public
-        });
-
-        // Catat agar tidak spam hari ini
-        localStorage.setItem("pdf_ai_last_notified", todayStr);
+        try {
+          // Trik aman untuk HP Android (Wajib pakai Service Worker)
+          if (navigator.serviceWorker) {
+            navigator.serviceWorker.ready.then((registration) => {
+              registration.showNotification("Ayo Belajar! 🚀", {
+                body: `Ujianmu tinggal ${calculatedDaysLeft} hari lagi! Yuk mulai fokus belajar hari ini.`,
+                icon: "/favicon.ico", 
+              });
+            });
+          } else {
+            // Fallback untuk Laptop
+            new Notification("Ayo Belajar! 🚀", {
+              body: `Ujianmu tinggal ${calculatedDaysLeft} hari lagi! Yuk mulai fokus belajar hari ini.`,
+              icon: "/favicon.ico",
+            });
+          }
+          // Catat agar tidak spam hari ini
+          localStorage.setItem("pdf_ai_last_notified", todayStr);
+        } catch (error) {
+          console.warn("Notifikasi background dicegah oleh browser HP, tapi web tetap aman.");
+        }
       }
     }
   };
