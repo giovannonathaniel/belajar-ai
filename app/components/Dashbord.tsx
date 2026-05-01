@@ -112,7 +112,9 @@ const GENERATION_COUNT_OPTIONS: GenerationCount[] = [15, 25, 30];
 
 
 export default function Dashboard({ onUpload, onUploadYoutube, onOpenNote, onWriteManual, onGoToLanding }: DashboardProps) {
-  // STATE NAVIGASI SIDEBAR
+const [showNotifPrompt, setShowNotifPrompt] = useState(true);
+  
+    // STATE NAVIGASI SIDEBAR
   const [activeSidebar, setActiveSidebar] = useState<"dashboard" | "study-guides" | "settings">("dashboard");
   
   // STATES UNTUK STUDY GUIDES
@@ -278,6 +280,18 @@ export default function Dashboard({ onUpload, onUploadYoutube, onOpenNote, onWri
           "start_pengingat": startTimestamp.toString(), // Pemicu MULAI
           "target_ujian": examTimestamp.toString()       // Pemicu BERHENTI
         });
+      }
+    }
+  };
+
+  const handleCustomSubscribe = async () => {
+    setShowNotifPrompt(false);
+
+    if (typeof window !== 'undefined' && window.OneSignal) {
+      try {
+        await window.OneSignal.Notifications.requestPermission();
+      } catch (error) {
+        console.error("Gagal meminta izin notifikasi:", error);
       }
     }
   };
@@ -1343,6 +1357,30 @@ export default function Dashboard({ onUpload, onUploadYoutube, onOpenNote, onWri
             <p className="text-center text-white/40 text-xs mt-6">
               Join 1 million people studying smarter with belajar.ai
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* --- 3. LETAKKAN UI BANNER DI SINI (SEBELUM PENUTUP UTAMA) --- */}
+      {showNotifPrompt && (
+        <div className="fixed bottom-5 left-5 right-5 bg-indigo-900 text-white p-5 rounded-xl shadow-lg z-50 flex flex-col md:flex-row items-center justify-between gap-4 border border-indigo-700">
+          <div>
+            <h3 className="font-bold text-lg">Jangan Sampai Nilaimu Jelek! 🚀</h3>
+            <p className="text-sm text-gray-300">Izinkan notifikasi agar kami bisa mengingatkan kamu belajar buat ujianmu.</p>
+          </div>
+          <div className="flex gap-3">
+            <button 
+              onClick={() => setShowNotifPrompt(false)} 
+              className="px-4 py-2 text-sm text-gray-300 hover:text-white"
+            >
+              Nanti
+            </button>
+            <button 
+              onClick={handleCustomSubscribe} 
+              className="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-500 rounded-lg font-bold"
+            >
+              Aktifkan
+            </button>
           </div>
         </div>
       )}
