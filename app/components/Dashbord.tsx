@@ -397,25 +397,27 @@ const [showNotifPrompt, setShowNotifPrompt] = useState(false); // Kita matikan d
     setItemToDelete(null); // Tutup modal setelah hapus
   };
 
-  const uniqueSubjects = ["Semua", ...Array.from(new Set(history.map(item => item.subject || "Subjek Umum")))];
+  // Gunakan optional chaining (?.) dan fallback ("") agar sistem tidak crash saat data kosong
+  const uniqueSubjects = ["Semua", ...Array.from(new Set(history.map(item => item?.subject || "Subjek Umum")))];
 
-  let processedHistory = history.filter((item) =>
-    item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.fileName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (item.subject && item.subject.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  let processedHistory = history.filter((item) => {
+    const search = searchQuery.toLowerCase();
+    const matchTitle = (item?.title || "").toLowerCase().includes(search);
+    const matchFile = (item?.fileName || "").toLowerCase().includes(search);
+    const matchSubj = (item?.subject || "").toLowerCase().includes(search);
+    return matchTitle || matchFile || matchSubj;
+  });
 
   if (filterSubject !== "Semua") {
-    processedHistory = processedHistory.filter(item => (item.subject || "Subjek Umum") === filterSubject);
+    processedHistory = processedHistory.filter(item => (item?.subject || "Subjek Umum") === filterSubject);
   }
 
   processedHistory.sort((a, b) => {
-    if (sortBy === "terbaru") return b.createdAt - a.createdAt;
-    if (sortBy === "terlama") return a.createdAt - b.createdAt;
-    if (sortBy === "abjad") return a.title.localeCompare(b.title);
+    if (sortBy === "terbaru") return (b?.createdAt || 0) - (a?.createdAt || 0);
+    if (sortBy === "terlama") return (a?.createdAt || 0) - (b?.createdAt || 0);
+    if (sortBy === "abjad") return (a?.title || "").localeCompare(b?.title || "");
     return 0;
   });
-
   const todayDate = new Date().toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 
   // Filter untuk Study Guides
@@ -721,7 +723,7 @@ const [showNotifPrompt, setShowNotifPrompt] = useState(false); // Kita matikan d
 </div>
                         </div>
                         <p className="text-white/50 text-sm line-clamp-2 mb-5 flex-1 leading-relaxed">
-                          {item.summaryHtml ? item.summaryHtml.replace(/<[^>]*>?/gm, '') : `# ${item.title}`}
+                          {item.summaryHtml ? String(item.summaryHtml).replace(/<[^>]*>?/gm, '') : '# ${item.title || "Catatan"}'}
                         </p>
                         <div className="flex items-center justify-between text-xs font-medium text-white/40 pt-4 border-t border-white/5">
                           <div className="flex items-center gap-1.5 bg-white/5 px-2 py-1 rounded-md"><BookOpen className="h-3.5 w-3.5" /> {item.cards?.length || 0} cards</div>
@@ -750,7 +752,7 @@ const [showNotifPrompt, setShowNotifPrompt] = useState(false); // Kita matikan d
                         </div>
                         <div className="hidden md:block flex-1 border-l border-white/10 pl-5 overflow-hidden">
                           <p className="text-white/50 text-sm truncate">
-                            {item.summaryHtml ? item.summaryHtml.replace(/<[^>]*>?/gm, '') : `# ${item.title}`}
+                            {item.summaryHtml ? String(item.summaryHtml).replace(/<[^>]*>?/gm, '') : '# ${item.title || "Catatan"}'}
                           </p>
                         </div>
                         <div className="w-full sm:w-auto flex items-center justify-between sm:justify-start gap-5 shrink-0 text-xs font-medium text-white/40 sm:ml-auto sm:border-l border-white/10 sm:pl-5">
