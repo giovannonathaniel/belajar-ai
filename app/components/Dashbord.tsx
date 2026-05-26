@@ -32,7 +32,9 @@ import {
   MoreVertical,
   Trash2,
   Star,    // <-- TAMBAHKAN INI
-  Users
+  Users,
+  Sun,
+  Moon
 } from "lucide-react";
 
 type Flashcard = { question: string; answer: string };
@@ -41,6 +43,7 @@ type MindMapData = { title: string; nodes: string[]; };
 type ChatMessage = { role: "user" | "ai"; content: string; };
 type GenerationCount = 15 | 25 | 30;
 type UserProfile = { name: string; email: string };
+type ThemeMode = "dark" | "light";
 
 type HistoryItem = {
   fileKey: string;
@@ -58,6 +61,17 @@ type HistoryItem = {
 
 const STORAGE_KEY = "pdf_ai_history_dashboard_v1";
 const USER_PROFILE_KEY = "belajar_ai_user_profile_v1";
+const THEME_KEY = "belajar_ai_theme_v1";
+
+const getInitialThemeMode = (): ThemeMode => {
+  if (typeof window === "undefined") return "dark";
+  try {
+    const savedTheme = window.localStorage.getItem(THEME_KEY);
+    return savedTheme === "light" || savedTheme === "dark" ? savedTheme : "dark";
+  } catch {
+    return "dark";
+  }
+};
 
 interface DashboardProps {
   onUpload: (file: File, subject: string, generationCount: GenerationCount) => void;
@@ -113,6 +127,7 @@ const GENERATION_COUNT_OPTIONS: GenerationCount[] = [15, 25, 30];
 
 export default function Dashboard({ onUpload, onUploadYoutube, onOpenNote, onWriteManual, onGoToLanding }: DashboardProps) {
 const [isMounted, setIsMounted] = useState(false);
+const [themeMode, setThemeMode] = useState<ThemeMode>(getInitialThemeMode);
 const [showNotifPrompt, setShowNotifPrompt] = useState(false); // Kita matikan default-nya
   // State untuk menyimpan event install browser
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -247,6 +262,12 @@ runOneSignal();
     // --- BERI SINYAL BAHWA HALAMAN SUDAH SIAP DIMUAT DI HP ---
     setIsMounted(true);
   }, []);
+
+  const toggleThemeMode = () => {
+    const nextTheme = themeMode === "dark" ? "light" : "dark";
+    setThemeMode(nextTheme);
+    try { localStorage.setItem(THEME_KEY, nextTheme); } catch {}
+  };
 
   const calculateProgress = (targetDateStr: string, startDateStr: string) => {
     const target = new Date(targetDateStr).getTime();
@@ -453,7 +474,7 @@ runOneSignal();
   }
   
   return (
-    <div className="min-h-[100dvh] md:h-screen overflow-auto md:overflow-hidden bg-[#11131f] text-white relative">
+    <div className={`min-h-[100dvh] md:h-screen overflow-auto md:overflow-hidden bg-[#11131f] text-white relative ${themeMode === "light" ? "theme-light" : "theme-dark"}`}>
       <div className="flex min-h-[100dvh] md:h-full flex-col md:flex-row p-2 md:p-4 gap-3 md:gap-4">
         
         {/* SIDEBAR DASHBOARD */}
@@ -519,6 +540,23 @@ runOneSignal();
   <Rocket className="h-5 w-5" />
   <span className="text-[15px] font-bold">Upgrade Pro</span>
 </button>
+                <button
+                  type="button"
+                  onClick={toggleThemeMode}
+                  className="mt-2 w-full rounded-[16px] px-5 py-3.5 flex items-center justify-between gap-4 text-left transition hover:bg-white/5 text-white/70"
+                  aria-label={themeMode === "dark" ? "Aktifkan light mode" : "Aktifkan dark mode"}
+                  aria-pressed={themeMode === "light"}
+                >
+                  <span className="flex items-center gap-4">
+                    {themeMode === "light" ? <Sun className="h-5 w-5 text-amber-400" /> : <Moon className="h-5 w-5 text-indigo-300" />}
+                    <span className="text-[15px] font-semibold">{themeMode === "light" ? "Light Mode" : "Dark Mode"}</span>
+                  </span>
+                  <span className={`relative h-7 w-12 rounded-full border transition ${themeMode === "light" ? "bg-amber-400/20 border-amber-300/40" : "bg-indigo-500/20 border-indigo-300/30"}`}>
+                    <span className={`absolute top-1 h-5 w-5 rounded-full flex items-center justify-center shadow-md transition-all ${themeMode === "light" ? "left-6 bg-amber-400 text-white" : "left-1 bg-[#5546ed] text-white"}`}>
+                      {themeMode === "light" ? <Sun className="h-3 w-3" /> : <Moon className="h-3 w-3" />}
+                    </span>
+                  </span>
+                </button>
               </div>
             </div>
           </nav>

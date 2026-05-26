@@ -32,3 +32,122 @@ textarea,
 select {
   touch-action: manipulation;
 }
+
+.theme-light {
+  color-scheme: light;
+}
+
+.theme-light,
+.theme-light [class*="bg-[#11131f]"] {
+  background: #f3f6fb;
+  color: #172033;
+}
+
+.theme-light [class*="from-[#202438]"],
+.theme-light [class*="to-[#1b1f2d]"] {
+  background: linear-gradient(180deg, #ffffff 0%, #eef3fa 100%);
+}
+
+.theme-light [class*="bg-[#1b1f2d]"],
+.theme-light [class*="bg-[#1f2029]"] {
+  background-color: #f8fafc;
+}
+
+.theme-light [class*="bg-[#202438]"],
+.theme-light [class*="bg-[#232738]"],
+.theme-light [class*="bg-[#252736]"],
+.theme-light [class*="bg-[#2a2c36]"],
+.theme-light [class*="bg-[#333541]"] {
+  background-color: #ffffff;
+}
+
+.theme-light [class*="bg-black/20"],
+.theme-light [class*="bg-black/30"],
+.theme-light [class*="bg-black/40"],
+.theme-light [class*="bg-white/[0.02]"],
+.theme-light [class*="bg-white/[0.03]"],
+.theme-light [class*="bg-white/5"] {
+  background-color: rgba(15, 23, 42, 0.045);
+}
+
+.theme-light [class*="hover:bg-white/5"]:hover,
+.theme-light [class*="hover:bg-white/10"]:hover,
+.theme-light [class*="hover:bg-white/[0.06]"]:hover,
+.theme-light [class*="hover:bg-white/[0.07]"]:hover,
+.theme-light [class*="hover:bg-white/[0.08]"]:hover {
+  background-color: rgba(15, 23, 42, 0.08);
+}
+
+.theme-light [class*="border-white/5"],
+.theme-light [class*="border-white/10"],
+.theme-light [class*="border-white/15"],
+.theme-light [class*="border-white/20"] {
+  border-color: rgba(15, 23, 42, 0.12);
+}
+
+.theme-light [class*="text-white"] {
+  color: #172033;
+}
+
+.theme-light [class*="text-white/90"],
+.theme-light [class*="text-white/80"],
+.theme-light [class*="text-white/70"] {
+  color: #334155;
+}
+
+.theme-light [class*="text-white/60"],
+.theme-light [class*="text-white/50"],
+.theme-light [class*="text-white/40"],
+.theme-light [class*="text-white/30"] {
+  color: #64748b;
+}
+
+.theme-light input,
+.theme-light textarea,
+.theme-light select,
+.theme-light [contenteditable="true"] {
+  color: #172033;
+}
+
+.theme-light input::placeholder,
+.theme-light textarea::placeholder {
+  color: #94a3b8;
+}
+
+.theme-light [class*="bg-[#5546ed]"],
+.theme-light [class*="bg-[#5546ED]"],
+.theme-light [class*="bg-[#4a28c1]"],
+.theme-light [class*="bg-[#4A28C1]"],
+.theme-light [class*="bg-blue-"],
+.theme-light [class*="bg-red-"],
+.theme-light [class*="bg-[#5865F2]"],
+.theme-light [class*="bg-[#7c3aed]"],
+.theme-light [class*="bg-[#7c5fba]"],
+.theme-light [class*="bg-gradient-to-r"] {
+  color: #ffffff;
+}
+
+.theme-light [class*="bg-[#5546ed]"] *,
+.theme-light [class*="bg-[#5546ED]"] *,
+.theme-light [class*="bg-[#4a28c1]"] *,
+.theme-light [class*="bg-[#4A28C1]"] *,
+.theme-light [class*="bg-blue-"] *,
+.theme-light [class*="bg-red-"] *,
+.theme-light [class*="bg-[#5865F2]"] *,
+.theme-light [class*="bg-[#7c3aed]"] *,
+.theme-light [class*="bg-[#7c5fba]"] *,
+.theme-light [class*="bg-gradient-to-r"] * {
+  color: #ffffff;
+}
+
+.theme-light [class*="shadow-2xl"],
+.theme-light [class*="shadow-xl"],
+.theme-light [class*="shadow-lg"] {
+  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.08);
+}
+
+.theme-light [class*="from-[#1b1f2d]"],
+.theme-light [class*="via-[#1b1f2d]"] {
+  --tw-gradient-from: #f8fafc var(--tw-gradient-from-position);
+  --tw-gradient-via: #f8fafc var(--tw-gradient-via-position);
+}

@@ -6,7 +6,7 @@ import {
   FileCode2, FileText, Folder, Heading1, Heading2, Heading3, HelpCircle, Italic, LayoutGrid,
   Lightbulb, Link2, List, ListOrdered, MessageCircle, MessageSquare, Minus, Pause, PenLine,
   Play, Plus, Quote, RefreshCw, RotateCcw, RotateCw, Send, Settings, Sparkles, Strikethrough,
-  Table2, Target, Underline, Upload, User, PlayCircle, Check, X
+  Table2, Target, Underline, Upload, User, PlayCircle, Check, X, Sun, Moon
 } from "lucide-react";
 
 type Flashcard = { question: string; answer: string };
@@ -14,6 +14,7 @@ type QuizItem = { question: string; options: string[]; answer: number; hint: str
 type MindMapData = { title: string; nodes: string[]; };
 type ChatMessage = { role: "user" | "ai"; content: string; };
 type GenerationCount = 15 | 25 | 30;
+type ThemeMode = "dark" | "light";
 
 type ApiResponse = {
   result?: string;
@@ -43,6 +44,17 @@ type HistoryItem = {
 type TabName = "Note" | "Mind Map" | "Flashcards" | "Quiz" | "Documents" | "Chat";
 
 const STORAGE_KEY = "pdf_ai_history_dashboard_v1";
+const THEME_KEY = "belajar_ai_theme_v1";
+
+const getInitialThemeMode = (): ThemeMode => {
+  if (typeof window === "undefined") return "dark";
+  try {
+    const savedTheme = window.localStorage.getItem(THEME_KEY);
+    return savedTheme === "light" || savedTheme === "dark" ? savedTheme : "dark";
+  } catch {
+    return "dark";
+  }
+};
 
 const navItems: { label: TabName; icon: any }[] = [
   { label: "Note", icon: PenLine }, { label: "Mind Map", icon: LayoutGrid },
@@ -108,6 +120,7 @@ interface EditorProps {
 
 export default function Editor({ initialFile, initialYoutubeUrl, initialFileKey, initialSubject, initialGenerationCount = 15, isManualMode, initialTitle, onBack }: EditorProps) {
   const [activeTab, setActiveTab] = useState<TabName>("Note");
+  const [themeMode, setThemeMode] = useState<ThemeMode>(getInitialThemeMode);
   const [title, setTitle] = useState("Catatan Baru");
   const [result, setResult] = useState("");
   const [cards, setCards] = useState<Flashcard[]>([]);
@@ -163,6 +176,12 @@ const [loadingProgress, setLoadingProgress] = useState(0);
     }
     return () => clearInterval(interval);
   }, [showGenerationLoading]);
+
+  const toggleThemeMode = () => {
+    const nextTheme = themeMode === "dark" ? "light" : "dark";
+    setThemeMode(nextTheme);
+    try { localStorage.setItem(THEME_KEY, nextTheme); } catch {}
+  };
 
   useEffect(() => { return () => { if (pdfUrl) URL.revokeObjectURL(pdfUrl); }; }, [pdfUrl]);
 
@@ -565,7 +584,7 @@ const [loadingProgress, setLoadingProgress] = useState(0);
   // --- TAMPILAN LAYAR LOADING KETIKA PROSES AI BERJALAN ---
   if (showGenerationLoading) {
     return (
-      <div className="h-screen overflow-hidden bg-[#11131f] text-white flex items-center justify-center px-6 relative">
+      <div className={`h-screen overflow-hidden bg-[#11131f] text-white flex items-center justify-center px-6 relative ${themeMode === "light" ? "theme-light" : "theme-dark"}`}>
         <div className="w-full max-w-[420px] text-center">
           <div className="relative mx-auto mb-8 h-24 w-24">
             <div className="absolute inset-0 rounded-[28px] border border-[#5546ED]/30 bg-[#5546ED]/10 shadow-2xl shadow-[#5546ED]/20" />
@@ -608,7 +627,7 @@ const [loadingProgress, setLoadingProgress] = useState(0);
   }
 
   return (
-    <div className="min-h-[100dvh] md:h-screen overflow-auto md:overflow-hidden bg-[#11131f] text-white">
+    <div className={`min-h-[100dvh] md:h-screen overflow-auto md:overflow-hidden bg-[#11131f] text-white ${themeMode === "light" ? "theme-light" : "theme-dark"}`}>
       <div className="flex min-h-[100dvh] md:h-full flex-col md:flex-row p-2 md:p-3 gap-3">
         {/* SIDEBAR */}
         <aside className="w-full md:w-[260px] shrink-0 rounded-[20px] md:rounded-[24px] border border-white/10 bg-gradient-to-b from-[#202438] to-[#1b1f2d] shadow-2xl overflow-hidden flex flex-col">
@@ -617,10 +636,40 @@ const [loadingProgress, setLoadingProgress] = useState(0);
               <div className="h-8 w-8 rounded-lg border border-white/15 bg-white/5 flex items-center justify-center"><Sparkles className="h-4 w-4 text-white" /></div>
               <div className="text-[17px] font-extrabold tracking-tight">belajar.ai</div>
             </div>
+            <button
+              type="button"
+              onClick={toggleThemeMode}
+              className={`md:hidden relative h-8 w-14 rounded-full border transition ${themeMode === "light" ? "bg-amber-400/20 border-amber-300/40" : "bg-indigo-500/20 border-indigo-300/30"}`}
+              aria-label={themeMode === "dark" ? "Aktifkan light mode" : "Aktifkan dark mode"}
+              aria-pressed={themeMode === "light"}
+            >
+              <span className={`absolute top-1 h-6 w-6 rounded-full flex items-center justify-center shadow-md transition-all ${themeMode === "light" ? "left-7 bg-amber-400 text-white" : "left-1 bg-[#5546ED] text-white"}`}>
+                {themeMode === "light" ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+              </span>
+            </button>
           </div>
           <div className="p-2 md:p-3 border-b border-white/10"><button onClick={onBack} className="w-full rounded-[14px] py-2.5 md:py-3 px-4 flex items-center gap-3 text-left hover:bg-white/5 transition"><ArrowLeft className="h-5 w-5 text-white/80" /><span className="text-[15px] font-bold">Kembali</span></button></div>
           <nav className="p-2 md:p-3 md:flex-1 overflow-x-auto"><div className="flex md:block gap-2 md:space-y-1.5 min-w-max md:min-w-0">{navItems.map((item) => { const Icon = item.icon; const active = item.label === activeTab; return (<button key={item.label} onClick={() => setActiveTab(item.label)} className={`shrink-0 md:w-full rounded-[14px] px-3 md:px-4 py-2.5 flex items-center gap-2 md:gap-3 text-left transition ${active ? "bg-[#5546ED] text-white shadow-lg shadow-[#5546ED]/20" : "hover:bg-white/5 text-white/70"}`}><Icon className={`h-4 w-4 ${active ? "text-white" : "text-white/80"}`} /><span className="text-[13px] md:text-[14px] font-semibold whitespace-nowrap">{item.label}</span></button>); })}</div></nav>
-          <div className="hidden md:block p-4 border-t border-white/10"><button onClick={() => setShowUpgradeModal(true)} className="w-full rounded-[14px] bg-[#5546ED] hover:bg-[#4A28C1] transition py-3 text-[14px] font-bold flex items-center justify-center gap-2 text-white shadow-lg shadow-[#5546ED]/20"><Sparkles className="h-4 w-4" />Upgrade</button></div>
+          <div className="hidden md:block p-4 border-t border-white/10">
+            <button
+              type="button"
+              onClick={toggleThemeMode}
+              className="mb-2 w-full rounded-[14px] border border-white/10 bg-white/[0.03] hover:bg-white/10 transition px-4 py-3 text-[14px] font-bold flex items-center justify-between gap-3 text-white/80 hover:text-white"
+              aria-label={themeMode === "dark" ? "Aktifkan light mode" : "Aktifkan dark mode"}
+              aria-pressed={themeMode === "light"}
+            >
+              <span className="flex items-center gap-2">
+                {themeMode === "light" ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-indigo-300" />}
+                {themeMode === "light" ? "Light Mode" : "Dark Mode"}
+              </span>
+              <span className={`relative h-7 w-12 rounded-full border transition ${themeMode === "light" ? "bg-amber-400/20 border-amber-300/40" : "bg-indigo-500/20 border-indigo-300/30"}`}>
+                <span className={`absolute top-1 h-5 w-5 rounded-full flex items-center justify-center shadow-md transition-all ${themeMode === "light" ? "left-6 bg-amber-400 text-white" : "left-1 bg-[#5546ED] text-white"}`}>
+                  {themeMode === "light" ? <Sun className="h-3 w-3" /> : <Moon className="h-3 w-3" />}
+                </span>
+              </span>
+            </button>
+            <button onClick={() => setShowUpgradeModal(true)} className="w-full rounded-[14px] bg-[#5546ED] hover:bg-[#4A28C1] transition py-3 text-[14px] font-bold flex items-center justify-center gap-2 text-white shadow-lg shadow-[#5546ED]/20"><Sparkles className="h-4 w-4" />Upgrade</button>
+          </div>
           <div className="hidden md:block px-4 pb-4 relative">
   
   {/* 1. PLACEHOLDER (Tak Terlihat) */}
